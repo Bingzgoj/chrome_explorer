@@ -126,3 +126,22 @@ th {
   background: var(--bgColor-muted);
   text-decoration: none;
 }
+
+.BtnGroup {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+}
+
+.btn-icon {
+  padding: 8px;
+  min-width: 40px;
+  min-height: 40px;
+}
