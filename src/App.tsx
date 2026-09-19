@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { FilterPanel } from './components/FilterPanel'
 import { InfoStrip } from './components/InfoStrip'
 import { PageHeader } from './components/PageHeader'
@@ -9,6 +9,7 @@ import { useChromeData } from './hooks/useChromeData'
 import { useTheme } from './hooks/useTheme'
 import type { BinaryType, DownloadPlatform } from './types/chrome'
 import { formatTimestamp } from './utils/date'
+import { detectPlatform, detectPlatformSync } from './utils/platform'
 import { compareVersionAsc } from './utils/version'
 
 const platforms: DownloadPlatform[] = ['linux64', 'mac-arm64', 'mac-x64', 'win32', 'win64']
@@ -19,8 +20,27 @@ function App() {
   const { theme, toggleTheme } = useTheme()
   const { data, loading, error, reload } = useChromeData()
   const [query, setQuery] = useState('')
-  const [platform, setPlatform] = useState<DownloadPlatform>('linux64')
+  // Default to the OS of whoever is viewing the page.
+  const [platform, setPlatform] = useState<DownloadPlatform>(() => detectPlatformSync())
   const [limit, setLimit] = useState(25)
+  const platformTouched = useRef(false)
+
+  useEffect(() => {
+    let cancelled = false
+    void detectPlatform().then((detected) => {
+      if (!cancelled && !platformTouched.current) {
+        setPlatform(detected)
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const handlePlatformChange = (value: DownloadPlatform) => {
+    platformTouched.current = true
+    setPlatform(value)
+  }
 
   const filtered = useMemo(() => {
     const rows = data?.versions ?? []
@@ -66,7 +86,7 @@ function App() {
         platforms={platforms}
         limits={rowLimits}
         onQueryChange={setQuery}
-        onPlatformChange={setPlatform}
+        onPlatformChange={handlePlatformChange}
         onLimitChange={setLimit}
       />
 
